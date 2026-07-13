@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#08080f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Signal Bot">
+<title>⚡ Signal Bot</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { min-height: 100vh; background: #08080f; color: #ddd; font-family: 'Segoe UI', sans-serif; padding: 16px; max-width: 480px; margin: 0 auto; }
+  .header { text-align: center; margin-bottom: 20px; padding-top: 12px; }
+  .header .sub { font-size: 10px; letter-spacing: 5px; color: #333; text-transform: uppercase; margin-bottom: 6px; }
+  .header h1 { font-size: 24px; font-weight: 800; color: #fff; }
+  .header p { font-size: 12px; color: #333; margin-top: 4px; }
+  .upload-area { border: 2px dashed #222; border-radius: 16px; padding: 40px 20px; text-align: center; cursor: pointer; background: #0e0e18; margin-bottom: 16px; transition: border-color 0.2s; }
+  .upload-area:hover { border-color: #444; }
+  .upload-area .icon { font-size: 40px; margin-bottom: 12px; }
+  .upload-area h3 { font-size: 15px; color: #555; margin-bottom: 6px; }
+  .upload-area p { font-size: 12px; color: #333; }
+  #fileInput { display: none; }
+  .preview-wrap { margin-bottom: 16px; }
+  .preview-wrap img { width: 100%; border-radius: 12px; border: 1px solid #1a1a2e; display: block; }
+  .btn-row { display: flex; gap: 8px; margin-top: 10px; }
+  .btn-analyze { flex: 1; padding: 14px; border-radius: 10px; border: none; background: linear-gradient(135deg, #00e676, #00bcd4); color: #000; font-size: 15px; font-weight: 800; cursor: pointer; letter-spacing: 1px; }
+  .btn-analyze:disabled { background: #1a1a2e; color: #444; cursor: not-allowed; }
+  .btn-reset { padding: 14px 16px; border-radius: 10px; border: 1px solid #222; background: transparent; color: #555; font-size: 13px; cursor: pointer; }
+  .result { border-radius: 16px; padding: 20px; margin-bottom: 20px; border: 2px solid; animation: fadeIn 0.3s ease; }
+  .signal-text { text-align: center; font-size: 52px; font-weight: 900; letter-spacing: 6px; line-height: 1; margin-bottom: 16px; }
+  .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .detail-box { background: #08080f80; border-radius: 8px; padding: 8px 10px; }
+  .detail-box .label { font-size: 10px; color: #444; margin-bottom: 3px; }
+  .detail-box .val { font-size: 13px; color: #bbb; font-weight: 600; }
+  .reason-box { background: #08080f60; border-radius: 10px; padding: 12px; font-size: 13px; color: #999; line-height: 1.7; }
+  .history-title { font-size: 10px; color: #333; letter-spacing: 3px; margin-bottom: 10px; text-transform: uppercase; }
+  .history-item { background: #0e0e18; border-radius: 10px; padding: 10px 12px; margin-bottom: 6px; display: flex; align-items: center; gap: 12px; border: 1px solid #111; }
+  .history-item img { width: 48px; height: 36px; object-fit: cover; border-radius: 6px; }
+  .history-item .sig { font-size: 16px; font-weight: 800; }
+  .history-item .type { font-size: 11px; color: #444; margin-left: 8px; }
+  .history-item .time { font-size: 11px; color: #333; margin-left: auto; }
+  .loading { text-align: center; padding: 20px; color: #555; font-size: 14px; }
+
+  .lock-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:#08080f; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; }
+  .lock-logo { width:100px; height:100px; border-radius:50%; margin-bottom:20px; border:2px solid #00e67630; }
+  .lock-title { font-size:20px; font-weight:800; color:#fff; margin-bottom:6px; }
+  .lock-sub { font-size:12px; color:#444; margin-bottom:30px; letter-spacing:2px; }
+  .lock-input { width:100%; max-width:300px; padding:14px 18px; border-radius:12px; border:1px solid #222; background:#0e0e18; color:#fff; font-size:16px; text-align:center; letter-spacing:4px; outline:none; margin-bottom:12px; }
+  .lock-input:focus { border-color:#00e676; }
+  .lock-btn { width:100%; max-width:300px; padding:14px; border-radius:12px; border:none; background:linear-gradient(135deg,#00e676,#00bcd4); color:#000; font-size:15px; font-weight:800; cursor:pointer; }
+  .lock-error { color:#ff1744; font-size:13px; margin-top:10px; display:none; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+
+<div class="lock-screen" id="lockScreen">
+  <img src="logo.png" alt="logo" class="lock-logo">
+  <div class="lock-title">Trader Faysal 421</div>
+  <div class="lock-sub">REAL KNOWLEDGE</div>
+  <input type="password" class="lock-input" id="passInput" placeholder="পাসওয়ার্ড দাও" maxlength="20">
+  <button class="lock-btn" onclick="checkPass()">🔓 প্রবেশ করো</button>
+  <div class="lock-error" id="passError">❌ পাসওয়ার্ড ভুল!</div>
+</div>
+<div class="header">
+  <img src="logo.png" alt="Trader Faysal 421" style="width:110px;height:110px;border-radius:50%;margin-bottom:10px;display:block;margin-left:auto;margin-right:auto;border:2px solid #00e67630;">
+  <div class="sub">Real Knowledge | Candle Power</div>
+  <p style="font-size:12px;color:#333;margin-top:4px;">স্ক্রিনশট দাও → সিগনাল পাও</p>
+</div>
+
+<div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+  <div class="icon">📸</div>
+  <h3>চার্টের স্ক্রিনশট দাও</h3>
+  <p>ট্যাপ করো বা ড্র্যাগ করো</p>
+</div>
+<input type="file" id="fileInput" accept="image/*">
+
+<div class="preview-wrap" id="previewWrap" style="display:none;">
+  <img id="previewImg" src="" alt="chart">
+  <div class="btn-row">
+    <button class="btn-reset" onclick="reset()" style="width:100%;padding:12px;border-radius:10px;border:1px solid #222;background:transparent;color:#555;font-size:13px;cursor:pointer;">🔄 নতুন স্ক্রিনশট</button>
+  </div>
+</div>
+
+<div id="loadingDiv" style="display:none;" class="loading">⚡ অ্যানালাইসিস হচ্ছে...</div>
+<div id="resultDiv" style="display:none;"></div>
+<div id="historyDiv"></div>
+
+<script>
+const SYSTEM_PROMPT = `তুমি একজন expert trading analyst যে শুধুমাত্র @Traderabir_420 এর Candle Power Framework দিয়ে চার্ট অ্যানালাইসিস করো।
+
+ফ্রেমওয়ার্কের নিয়ম:
+- Pure Pressure: সরাসরি একদিকে ক্লোজ, কোনো উইক নেই
+- Impure Pressure: উইক আছে কিন্তু exhausted না
+- Bad Candle: Buyer এর জন্য উপরে উইক দুর্বল, Seller এর জন্য নিচে উইক দুর্বল
+- M1 Order Flow: ৩ ক্যান্ডেলে Increment বা Decrement
+- M2 PRR: পিছনে Extreme Power থাকার পর বিপরীত ক্যান্ডেল আসলে Reversal
+- M3 Wick: বড় উইক তৈরি হলে পরের ক্যান্ডেল উইক Fill করতে আসে
+- M4 Liquidity: ডাউনে বায়ার ক্যান্ডেল আসলে পরেরটা Down
+- M5 Shocked: শেষ ১৫ সেকেন্ডে Shocked মুভ হলে পরের ক্যান্ডেল বিপরীত
+- M6 Structure: Consolidation এ আটকে গেলে স্ট্রাকচারের উপরে Down নিচে Up
+- Absence: বিপরীত পক্ষ না আসলে Continuation
+- 3 Candle Theory: Strong+Strong+Exhausted=Reversal, Weak+Strong+Strong=Continuation
+- Avoid: Doji, দুই পাশে বড় উইক, Abnormal candle
+
+JSON ফরম্যাটে উত্তর দাও, অন্য কিছু লিখবে না:
+{"signal":"UP বা DOWN বা AVOID","sentiment":"আপ/ডাউন/মিক্সড","openArea":"আপ/ডাউন/নেই","candlePower":"Buyer/Seller/মিক্সড","exhaustionType":"M1/M2/M3/M4/M5/M6/Absence/Pure Pressure/নেই","reason":"২-৩ লাইনে বাংলায় কারণ"}`;
+
+let currentBase64 = null;
+let history = [];
+
+document.getElementById('fileInput').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    currentBase64 = ev.target.result.split(',')[1];
+    document.getElementById('previewImg').src = ev.target.result;
+    document.getElementById('uploadArea').style.display = 'none';
+    document.getElementById('previewWrap').style.display = 'block';
+    document.getElementById('resultDiv').style.display = 'none';
+    analyze();
+  };
+  reader.readAsDataURL(file);
+});
+
+const uploadArea = document.getElementById('uploadArea');
+uploadArea.addEventListener('dragover', e => e.preventDefault());
+uploadArea.addEventListener('drop', e => {
+  e.preventDefault();
+  const file = e.dataTransfer.files[0];
+  if (file) document.getElementById('fileInput').files = e.dataTransfer.files;
+});
+
+async function analyze() {
+  if (!currentBase64) return;
+  document.getElementById('analyzeBtn').disabled = true;
+  document.getElementById('loadingDiv').style.display = 'block';
+  document.getElementById('resultDiv').style.display = 'none';
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 300,
+        system: SYSTEM_PROMPT,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: currentBase64 } },
+            { type: 'text', text: 'এই চার্টটি দেখো এবং Traderabir_420 এর Candle Power Framework অনুযায়ী অ্যানালাইসিস করো।' }
+          ]
+        }]
+      })
+    });
+
+    const data = await res.json();
+    const text = data.content?.[0]?.text || '{}';
+    const clean = text.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+    showResult(parsed);
+
+    history.unshift({ img: document.getElementById('previewImg').src, result: parsed, time: new Date().toLocaleTimeString('bn-BD') });
+    if (history.length > 4) history.pop();
+    renderHistory();
+  } catch(e) {
+    showResult({ signal: 'ERROR', reason: 'অ্যানালাইসিস ব্যর্থ হয়েছে। আবার চেষ্টা করো।' });
+  }
+
+  document.getElementById('loadingDiv').style.display = 'none';
+  document.getElementById('analyzeBtn').disabled = false;
+}
+
+function sigColor(s) {
+  return s === 'UP' ? '#00e676' : s === 'DOWN' ? '#ff1744' : s === 'AVOID' ? '#ffd600' : '#888';
+}
+function sigBg(s) {
+  return s === 'UP' ? '#00e67615' : s === 'DOWN' ? '#ff174415' : s === 'AVOID' ? '#ffd60015' : '#ffffff08';
+}
+function sigIcon(s) {
+  return s === 'UP' ? '▲' : s === 'DOWN' ? '▼' : s === 'AVOID' ? '⚠' : '?';
+}
+
+function showResult(r) {
+  const color = sigColor(r.signal);
+  const bg = sigBg(r.signal);
+  document.getElementById('resultDiv').style.display = 'block';
+  document.getElementById('resultDiv').innerHTML = `
+    <div class="result" style="background:${bg};border-color:${color}50;">
+      <div class="signal-text" style="color:${color};text-shadow:0 0 30px ${color}50;">${sigIcon(r.signal)} ${r.signal}</div>
+      <div class="details-grid">
+        <div class="detail-box"><div class="label">📈 Sentiment</div><div class="val">${r.sentiment||'—'}</div></div>
+        <div class="detail-box"><div class="label">🔓 Open Area</div><div class="val">${r.openArea||'—'}</div></div>
+        <div class="detail-box"><div class="label">⚡ Power</div><div class="val">${r.candlePower||'—'}</div></div>
+        <div class="detail-box"><div class="label">🔍 Type</div><div class="val">${r.exhaustionType||'—'}</div></div>
+      </div>
+      <div class="reason-box">💡 ${r.reason||''}</div>
+    </div>`;
+}
+
+function renderHistory() {
+  if (!history.length) return;
+  let html = '<div class="history-title">আগের সিগনাল</div>';
+  history.forEach(h => {
+    const color = sigColor(h.result.signal);
+    html += `<div class="history-item">
+      <img src="${h.img}" alt="">
+      <div><span class="sig" style="color:${color}">${sigIcon(h.result.signal)} ${h.result.signal}</span><span class="type">${h.result.exhaustionType||''}</span></div>
+      <div class="time">${h.time}</div>
+    </div>`;
+  });
+  document.getElementById('historyDiv').innerHTML = html;
+}
+
+function reset() {
+  currentBase64 = null;
+  document.getElementById('fileInput').value = '';
+  document.getElementById('uploadArea').style.display = 'block';
+  document.getElementById('previewWrap').style.display = 'none';
+  document.getElementById('resultDiv').style.display = 'none';
+}
+
+const PASS = '420421422';
+
+function checkPass() {
+  const input = document.getElementById('passInput').value;
+  if (input === PASS) {
+    document.getElementById('lockScreen').style.display = 'none';
+    sessionStorage.setItem('auth', '1');
+  } else {
+    document.getElementById('passError').style.display = 'block';
+    document.getElementById('passInput').value = '';
+    document.getElementById('passInput').focus();
+  }
+}
+
+document.getElementById('passInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') checkPass();
+});
+
+if (sessionStorage.getItem('auth') === '1') {
+  document.getElementById('lockScreen').style.display = 'none';
+}
+
+</script>
+</body>
+  </html>
+  
